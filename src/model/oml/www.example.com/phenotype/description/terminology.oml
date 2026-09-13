@@ -1,0 +1,65 @@
+@dc:title "Terminology concepts"
+@dc:description "SNOMED/LOINC concepts, the is-a hierarchy, and data mappings. eGFR is left unmapped."
+description <http://www.example.com/phenotype/description/terminology#> as terminology {
+    uses <http://purl.org/dc/elements/1.1/> as dc
+    uses <http://www.w3.org/2000/01/rdf-schema#> as rdfs
+    uses <http://www.example.com/phenotype/vocabulary#> as phenotype
+    extends <http://www.example.com/phenotype/description/data#> as data
+
+    @rdfs:label "Diabetes mellitus (disorder)"
+    instance DiabetesMellitus : phenotype:ClinicalConcept [
+        phenotype:conceptCode "73211009"
+        phenotype:sourceSystem "SNOMED CT"
+        phenotype:sourceVersion "2024-09"
+        phenotype:mappingStatus "Broader"
+        phenotype:mappedTo data:ConditionCode
+        phenotype:subsumes Type2Diabetes
+        phenotype:subsumes Type1Diabetes
+    ]
+
+    @rdfs:label "Type 2 diabetes mellitus (disorder)"
+    instance Type2Diabetes : phenotype:ClinicalConcept [
+        phenotype:conceptCode "44054006"
+        phenotype:sourceSystem "SNOMED CT"
+        phenotype:sourceVersion "2024-09"
+        phenotype:mappingStatus "Exact"
+        phenotype:mappedTo data:ConditionCode
+        phenotype:subsumes Type2DiabetesWithRenal
+    ]
+
+    @rdfs:label "Type 2 diabetes mellitus with renal complications (disorder)"
+    instance Type2DiabetesWithRenal : phenotype:ClinicalConcept [
+        phenotype:conceptCode "421893009"
+        phenotype:sourceSystem "SNOMED CT"
+        phenotype:sourceVersion "2024-09"
+        phenotype:mappingStatus "Exact"
+        phenotype:mappedTo data:ConditionCode
+    ]
+
+    @rdfs:label "Type 1 diabetes mellitus (disorder)"
+    instance Type1Diabetes : phenotype:ClinicalConcept [
+        phenotype:conceptCode "46635009"
+        phenotype:sourceSystem "SNOMED CT"
+        phenotype:sourceVersion "2024-09"
+        phenotype:mappingStatus "Exact"
+        phenotype:mappedTo data:ConditionCode
+    ]
+
+    @rdfs:label "Hemoglobin A1c measurement"
+    instance HbA1cMeasurement : phenotype:ClinicalConcept [
+        phenotype:conceptCode "43396009"
+        phenotype:sourceSystem "SNOMED CT"
+        phenotype:sourceVersion "2024-09"
+        phenotype:mappingStatus "Exact"
+        phenotype:mappedTo data:ObservationValue
+    ]
+
+    // no mappedTo -> won't classify as MappedConcept
+    @rdfs:label "Estimated glomerular filtration rate"
+    instance EgfrMeasurement : phenotype:ClinicalConcept [
+        phenotype:conceptCode "33914-3"
+        phenotype:sourceSystem "LOINC"
+        phenotype:sourceVersion "2.76"
+        phenotype:mappingStatus "Unmapped"
+    ]
+}

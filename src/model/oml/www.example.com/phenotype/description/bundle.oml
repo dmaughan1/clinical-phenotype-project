@@ -1,0 +1,10 @@
+@dc:title "Phenotyping description bundle"
+@dc:description "Pulls in the vocabulary bundle + all descriptions so reasoning sees everything at once."
+description bundle <http://www.example.com/phenotype/description/bundle#> as d-bundle {
+    uses <http://purl.org/dc/elements/1.1/> as dc
+    uses <http://www.example.com/phenotype/vocabulary-bundle#>
+    includes <http://www.example.com/phenotype/description/data#>
+    includes <http://www.example.com/phenotype/description/terminology#>
+    includes <http://www.example.com/phenotype/description/definition#>
+    includes <http://www.example.com/phenotype/description/cohort#>
+}

@@ -1,0 +1,27 @@
+@dc:title "Datasets and data elements"
+@dc:description "Site A is a full EHR; Site B is claims-only (no lab values)."
+description <http://www.example.com/phenotype/description/data#> as data {
+    uses <http://purl.org/dc/elements/1.1/> as dc
+    uses <http://www.w3.org/2000/01/rdf-schema#> as rdfs
+    uses <http://www.example.com/phenotype/vocabulary#> as phenotype
+
+    @rdfs:label "Site A EHR"
+    @dc:description "Full EHR: coded conditions + lab observations."
+    instance SiteAEhr : phenotype:Dataset []
+
+    @rdfs:label "Site B Claims"
+    @dc:description "Claims extract: diagnosis codes only, no labs."
+    instance SiteBClaims : phenotype:Dataset []
+
+    @rdfs:label "Condition.code"
+    instance ConditionCode : phenotype:DataElement [
+        phenotype:availableIn SiteAEhr
+        phenotype:availableIn SiteBClaims
+    ]
+
+    // lab value: Site A only
+    @rdfs:label "Observation.value"
+    instance ObservationValue : phenotype:DataElement [
+        phenotype:availableIn SiteAEhr
+    ]
+}

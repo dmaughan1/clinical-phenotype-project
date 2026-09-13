@@ -1,0 +1,91 @@
+@dc:title "T2DM phenotype definition"
+@dc:description "Intent + computable criteria. Metformin intent has no criterion; eGFR criterion hits an unmapped concept."
+description <http://www.example.com/phenotype/description/definition#> as definition {
+    uses <http://purl.org/dc/elements/1.1/> as dc
+    uses <http://www.w3.org/2000/01/rdf-schema#> as rdfs
+    uses <http://www.example.com/phenotype/vocabulary#> as phenotype
+    extends <http://www.example.com/phenotype/description/terminology#> as terminology
+
+    // --- intent ---
+
+    @rdfs:label "Intent: elevated HbA1c"
+    instance IntentElevatedHbA1c : phenotype:IntendedCriterion [
+        phenotype:intentText "Patient has chronically elevated HbA1c."
+    ]
+
+    @rdfs:label "Intent: recorded T2DM diagnosis"
+    instance IntentDiabetesDx : phenotype:IntendedCriterion [
+        phenotype:intentText "Patient has a recorded clinical diagnosis of type 2 diabetes."
+    ]
+
+    @rdfs:label "Intent: exclude type 1 diabetes"
+    instance IntentExcludeT1 : phenotype:IntendedCriterion [
+        phenotype:intentText "Exclude patients who have type 1 diabetes."
+    ]
+
+    @rdfs:label "Intent: assess renal function"
+    instance IntentRenalAssessment : phenotype:IntendedCriterion [
+        phenotype:intentText "Assess renal function via eGFR in diagnosed patients."
+    ]
+
+    // no computable criterion implements this -> dropped
+    @rdfs:label "Intent: on metformin therapy"
+    instance IntentOnMetformin : phenotype:IntendedCriterion [
+        phenotype:intentText "Patient is currently on metformin therapy."
+    ]
+
+    // --- computable criteria ---
+
+    @rdfs:label "HbA1c >= 6.5%"
+    instance HbA1cGE65 : phenotype:InclusionCriterion [
+        phenotype:logicExpression "Observation(HbA1c).value >= 6.5"
+        phenotype:threshold 6.5
+        phenotype:implements IntentElevatedHbA1c
+        phenotype:dependsOnConcept terminology:HbA1cMeasurement
+    ]
+
+    @rdfs:label "Recorded T2DM diagnosis code"
+    instance T2dmDx : phenotype:InclusionCriterion [
+        phenotype:logicExpression "exists Condition.code subsumedBy 44054006"
+        phenotype:implements IntentDiabetesDx
+        phenotype:dependsOnConcept terminology:Type2Diabetes
+    ]
+
+    @rdfs:label "No type 1 diabetes code"
+    instance ExcludeT1 : phenotype:ExclusionCriterion [
+        phenotype:logicExpression "not exists Condition.code subsumedBy 46635009"
+        phenotype:implements IntentExcludeT1
+        phenotype:dependsOnConcept terminology:Type1Diabetes
+    ]
+
+    // depends on the unmapped eGFR concept, and on the diagnosis criterion
+    @rdfs:label "eGFR < 60"
+    instance EgfrBelow60 : phenotype:InclusionCriterion [
+        phenotype:logicExpression "Observation(eGFR).value < 60"
+        phenotype:threshold 60.0
+        phenotype:implements IntentRenalAssessment
+        phenotype:dependsOnConcept terminology:EgfrMeasurement
+        phenotype:dependsOn T2dmDx
+    ]
+
+    // --- phenotype + cohort ---
+
+    // comprises intent too, so dropped intent stays attached to the phenotype
+    @rdfs:label "Type 2 Diabetes Phenotype"
+    @dc:description "Adults with type 2 diabetes, for a comparative-effectiveness study."
+    instance T2dmPhenotype : phenotype:Phenotype [
+        phenotype:comprises IntentElevatedHbA1c
+        phenotype:comprises IntentDiabetesDx
+        phenotype:comprises IntentExcludeT1
+        phenotype:comprises IntentRenalAssessment
+        phenotype:comprises IntentOnMetformin
+        phenotype:comprises HbA1cGE65
+        phenotype:comprises T2dmDx
+        phenotype:comprises ExcludeT1
+        phenotype:comprises EgfrBelow60
+        phenotype:yields T2dmCohort
+    ]
+
+    @rdfs:label "Type 2 Diabetes Cohort"
+    instance T2dmCohort : phenotype:Cohort []
+}

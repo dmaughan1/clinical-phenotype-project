@@ -1,0 +1,6 @@
+@dc:title "Phenotyping vocabulary bundle"
+@dc:description "Closes the vocabulary so sibling-disjointness axioms get generated."
+vocabulary bundle <http://www.example.com/phenotype/vocabulary-bundle#> as v-bundle {
+    includes <http://purl.org/dc/elements/1.1/> as dc
+    includes <http://www.example.com/phenotype/vocabulary#>
+}

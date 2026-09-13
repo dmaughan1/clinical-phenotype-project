@@ -1,0 +1,210 @@
+@dc:title "Clinical phenotyping vocabulary"
+@dc:description "Terms for describing a phenotype and tracing it from clinical intent down to data."
+@dc:creator "David Maughan"
+vocabulary <http://www.example.com/phenotype/vocabulary#> as phenotype {
+
+    extends <http://purl.org/dc/elements/1.1/> as dc
+    extends <http://www.w3.org/2001/XMLSchema#> as xsd
+
+    // --- aspects ---
+
+    aspect Artifact
+
+    // abstract: a real criterion is either prose intent or executable logic, never a bare Criterion
+    aspect Criterion < Artifact
+
+    // --- concepts ---
+
+    concept Phenotype < Artifact
+
+    // prose clinical intent, as written by the researcher
+    concept IntendedCriterion < Criterion
+
+    // executable criterion; must trace back to the intent it implements
+    concept ComputableCriterion < Criterion [
+        restricts implements to min 1
+    ]
+
+    concept InclusionCriterion < ComputableCriterion
+    concept ExclusionCriterion < ComputableCriterion
+
+    // terminology concept (SNOMED/LOINC/...), referenced from an external source
+    concept ClinicalConcept < Artifact
+
+    // a field in an institutional data model (e.g. a FHIR element)
+    concept DataElement < Artifact
+
+    concept Dataset < Artifact
+    concept Patient < Artifact
+    concept Cohort < Artifact
+
+    // a lab value / coded observation backing a criterion evaluation
+    concept Evidence < Artifact
+
+    // --- scalars (closed value sets) ---
+
+    scalar SourceSystem [
+        oneOf "SNOMED CT", "ICD-10-CM", "LOINC", "RxNorm"
+    ]
+
+    scalar MappingStatus [
+        oneOf "Exact", "Broader", "Narrower", "Unmapped"
+    ]
+
+    scalar MembershipStatus [
+        oneOf "Included", "Excluded", "Indeterminate"
+    ]
+
+    // --- scalar properties ---
+
+    scalar property intentText [
+        domain IntendedCriterion
+        range xsd:string
+        functional
+    ]
+
+    scalar property logicExpression [
+        domain ComputableCriterion
+        range xsd:string
+        functional
+    ]
+
+    // e.g. HbA1c >= 6.5
+    scalar property threshold [
+        domain ComputableCriterion
+        range xsd:decimal
+        functional
+    ]
+
+    scalar property conceptCode [
+        domain ClinicalConcept
+        range xsd:string
+        functional
+    ]
+
+    scalar property sourceSystem [
+        domain ClinicalConcept
+        range SourceSystem
+        functional
+    ]
+
+    scalar property sourceVersion [
+        domain ClinicalConcept
+        range xsd:string
+        functional
+    ]
+
+    scalar property mappingStatus [
+        domain ClinicalConcept
+        range MappingStatus
+        functional
+    ]
+
+    scalar property membershipStatus [
+        domain Evaluation
+        range MembershipStatus
+        functional
+    ]
+
+    // --- relations ---
+
+    relation comprises [
+        from Phenotype
+        to Criterion
+        reverse partOf
+    ]
+
+    // functional: one intent per computable criterion
+    relation implements [
+        from ComputableCriterion
+        to IntendedCriterion
+        reverse isImplementedBy
+        functional
+    ]
+
+    relation dependsOnConcept [
+        from ComputableCriterion
+        to ClinicalConcept
+        reverse conceptUsedBy
+    ]
+
+    // criterion-to-criterion dependency (drives change-impact); one-way, never self
+    relation dependsOn [
+        from ComputableCriterion
+        to ComputableCriterion
+        reverse requiredBy
+        asymmetric
+        irreflexive
+    ]
+
+    relation mappedTo [
+        from ClinicalConcept
+        to DataElement
+        reverse mapsFrom
+    ]
+
+    relation availableIn [
+        from DataElement
+        to Dataset
+        reverse provides
+    ]
+
+    // terminology is-a; transitive so ancestor subsumption is inferred
+    relation subsumes [
+        from ClinicalConcept
+        to ClinicalConcept
+        reverse subsumedBy
+        transitive
+    ]
+
+    relation supports [
+        from Evidence
+        to Evaluation
+        reverse supportedBy
+    ]
+
+    // inverse functional: a cohort comes from exactly one phenotype
+    relation yields [
+        from Phenotype
+        to Cohort
+        reverse yieldedBy
+        inverse functional
+    ]
+
+    // not asserted by hand -- derived by the CohortInclusion rule
+    relation memberOf [
+        from Patient
+        to Cohort
+        reverse hasMember
+    ]
+
+    // --- reified relation ---
+
+    // patient x criterion decision; reified so it can carry status + evidence
+    relation entity Evaluation [
+        from Patient
+        to ComputableCriterion
+        forward satisfies
+        reverse satisfiedBy
+    ] < Artifact
+
+    // --- defined concepts (reasoner classifies) ---
+
+    // intent that has at least one implementing criterion; the rest were dropped
+    concept RepresentedIntent = IntendedCriterion [
+        restricts isImplementedBy to min 1
+    ]
+
+    // concept that actually maps to data; unclassified concepts can't be evaluated
+    concept MappedConcept = ClinicalConcept [
+        restricts mappedTo to min 1
+    ]
+
+    // --- rules ---
+
+    // satisfy an inclusion criterion of a phenotype => member of that phenotype's cohort
+    rule CohortInclusion [
+        satisfies(p, c) & InclusionCriterion(c) & partOf(c, ph) & yields(ph, coh)
+        -> memberOf(p, coh)
+    ]
+}
