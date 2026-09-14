@@ -8,6 +8,7 @@ description <http://www.example.com/phenotype/description/terminology#> as termi
 
     @rdfs:label "Diabetes mellitus (disorder)"
     instance DiabetesMellitus : phenotype:ClinicalConcept [
+        phenotype:id "CON-DM"
         phenotype:conceptCode "73211009"
         phenotype:sourceSystem "SNOMED CT"
         phenotype:sourceVersion "2024-09"
@@ -19,6 +20,7 @@ description <http://www.example.com/phenotype/description/terminology#> as termi
 
     @rdfs:label "Type 2 diabetes mellitus (disorder)"
     instance Type2Diabetes : phenotype:ClinicalConcept [
+        phenotype:id "CON-T2DM"
         phenotype:conceptCode "44054006"
         phenotype:sourceSystem "SNOMED CT"
         phenotype:sourceVersion "2024-09"
@@ -29,6 +31,7 @@ description <http://www.example.com/phenotype/description/terminology#> as termi
 
     @rdfs:label "Type 2 diabetes mellitus with renal complications (disorder)"
     instance Type2DiabetesWithRenal : phenotype:ClinicalConcept [
+        phenotype:id "CON-T2DMREN"
         phenotype:conceptCode "421893009"
         phenotype:sourceSystem "SNOMED CT"
         phenotype:sourceVersion "2024-09"
@@ -38,6 +41,7 @@ description <http://www.example.com/phenotype/description/terminology#> as termi
 
     @rdfs:label "Type 1 diabetes mellitus (disorder)"
     instance Type1Diabetes : phenotype:ClinicalConcept [
+        phenotype:id "CON-T1DM"
         phenotype:conceptCode "46635009"
         phenotype:sourceSystem "SNOMED CT"
         phenotype:sourceVersion "2024-09"
@@ -47,6 +51,7 @@ description <http://www.example.com/phenotype/description/terminology#> as termi
 
     @rdfs:label "Hemoglobin A1c measurement"
     instance HbA1cMeasurement : phenotype:ClinicalConcept [
+        phenotype:id "CON-HBA1C"
         phenotype:conceptCode "43396009"
         phenotype:sourceSystem "SNOMED CT"
         phenotype:sourceVersion "2024-09"
@@ -57,6 +62,7 @@ description <http://www.example.com/phenotype/description/terminology#> as termi
     // no mappedTo -> won't classify as MappedConcept
     @rdfs:label "Estimated glomerular filtration rate"
     instance EgfrMeasurement : phenotype:ClinicalConcept [
+        phenotype:id "CON-EGFR"
         phenotype:conceptCode "33914-3"
         phenotype:sourceSystem "LOINC"
         phenotype:sourceVersion "2.76"

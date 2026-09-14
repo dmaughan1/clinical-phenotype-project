@@ -57,6 +57,13 @@ vocabulary <http://www.example.com/phenotype/vocabulary#> as phenotype {
 
     // --- scalar properties ---
 
+    // stable identifier every artifact carries
+    scalar property id [
+        domain Artifact
+        range xsd:string
+        functional
+    ]
+
     scalar property intentText [
         domain IntendedCriterion
         range xsd:string
@@ -128,15 +135,6 @@ vocabulary <http://www.example.com/phenotype/vocabulary#> as phenotype {
         reverse conceptUsedBy
     ]
 
-    // criterion-to-criterion dependency (drives change-impact); one-way, never self
-    relation dependsOn [
-        from ComputableCriterion
-        to ComputableCriterion
-        reverse requiredBy
-        asymmetric
-        irreflexive
-    ]
-
     relation mappedTo [
         from ClinicalConcept
         to DataElement
@@ -171,11 +169,18 @@ vocabulary <http://www.example.com/phenotype/vocabulary#> as phenotype {
         inverse functional
     ]
 
-    // not asserted by hand -- derived by the CohortInclusion rule
-    relation memberOf [
+    // derived by CohortExclusion: a patient kept out of a cohort
+    relation excludedFrom [
         from Patient
         to Cohort
-        reverse hasMember
+        reverse excludes
+    ]
+
+    // derived by CriterionEvaluable: criterion has a data path in a dataset
+    relation evaluableIn [
+        from ComputableCriterion
+        to Dataset
+        reverse canEvaluate
     ]
 
     // --- reified relation ---
@@ -202,9 +207,16 @@ vocabulary <http://www.example.com/phenotype/vocabulary#> as phenotype {
 
     // --- rules ---
 
-    // satisfy an inclusion criterion of a phenotype => member of that phenotype's cohort
-    rule CohortInclusion [
-        satisfies(p, c) & InclusionCriterion(c) & partOf(c, ph) & yields(ph, coh)
-        -> memberOf(p, coh)
+    // exclusion is disjunctive: meeting ANY exclusion criterion keeps the patient out
+    rule CohortExclusion [
+        satisfies(p, c) & ExclusionCriterion(c) & partOf(c, ph) & yields(ph, coh)
+        -> excludedFrom(p, coh)
+    ]
+
+    // a criterion is evaluable in a dataset when the concept it uses has a data element there
+    // (each computable criterion here references a single concept, so this is exact)
+    rule CriterionEvaluable [
+        dependsOnConcept(cr, k) & mappedTo(k, e) & availableIn(e, d)
+        -> evaluableIn(cr, d)
     ]
 }

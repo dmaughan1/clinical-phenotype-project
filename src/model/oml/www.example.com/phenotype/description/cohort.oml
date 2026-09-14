@@ -1,5 +1,5 @@
 @dc:title "Patients, evaluations, evidence"
-@dc:description "Synthetic patients evaluated against the criteria. Cohort membership is derived, not asserted."
+@dc:description "Synthetic patients evaluated against the criteria. Exclusion is derived, not asserted."
 description <http://www.example.com/phenotype/description/cohort#> as cohort {
     uses <http://purl.org/dc/elements/1.1/> as dc
     uses <http://www.w3.org/2000/01/rdf-schema#> as rdfs
@@ -10,32 +10,39 @@ description <http://www.example.com/phenotype/description/cohort#> as cohort {
 
     @rdfs:label "Patient 0001"
     @dc:description "HbA1c 7.8%, T2DM dx, no T1."
-    instance PatientAnon001 : phenotype:Patient []
+    instance PatientAnon001 : phenotype:Patient [
+        phenotype:id "PT-0001"
+    ]
 
     @rdfs:label "Patient 0002"
     @dc:description "T1DM dx; excluded from the T2DM cohort."
-    instance PatientAnon002 : phenotype:Patient []
+    instance PatientAnon002 : phenotype:Patient [
+        phenotype:id "PT-0002"
+    ]
 
     // --- evaluations (patient x criterion) ---
 
-    @rdfs:label "P0001 satisfies HbA1c criterion"
+    @rdfs:label "P0001 meets HbA1c criterion"
     relation instance Eval001HbA1c : phenotype:Evaluation [
         from PatientAnon001
         to definition:HbA1cGE65
+        phenotype:id "EVAL-0001-HBA1C"
         phenotype:membershipStatus "Included"
     ]
 
-    @rdfs:label "P0001 satisfies diagnosis criterion"
+    @rdfs:label "P0001 meets diagnosis criterion"
     relation instance Eval001Dx : phenotype:Evaluation [
         from PatientAnon001
         to definition:T2dmDx
+        phenotype:id "EVAL-0001-DX"
         phenotype:membershipStatus "Included"
     ]
 
-    @rdfs:label "P0002 triggers type 1 exclusion"
+    @rdfs:label "P0002 meets type 1 exclusion"
     relation instance Eval002ExcludeT1 : phenotype:Evaluation [
         from PatientAnon002
         to definition:ExcludeT1
+        phenotype:id "EVAL-0002-EXT1"
         phenotype:membershipStatus "Excluded"
     ]
 
@@ -44,18 +51,21 @@ description <http://www.example.com/phenotype/description/cohort#> as cohort {
     @rdfs:label "Lab result: HbA1c 7.8%"
     @dc:description "Observation HbA1c = 7.8% on 2024-05-12."
     instance EvidenceHbA1c001 : phenotype:Evidence [
+        phenotype:id "EV-HBA1C-001"
         phenotype:supports Eval001HbA1c
     ]
 
     @rdfs:label "Coded diagnosis: T2DM"
     @dc:description "Condition 44054006 recorded 2023-11-02."
     instance EvidenceDx001 : phenotype:Evidence [
+        phenotype:id "EV-DX-001"
         phenotype:supports Eval001Dx
     ]
 
     @rdfs:label "Coded diagnosis: T1DM"
     @dc:description "Condition 46635009 recorded 2022-03-18."
     instance EvidenceT1002 : phenotype:Evidence [
+        phenotype:id "EV-T1-002"
         phenotype:supports Eval002ExcludeT1
     ]
 }

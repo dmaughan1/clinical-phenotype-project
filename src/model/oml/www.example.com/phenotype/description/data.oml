@@ -7,14 +7,19 @@ description <http://www.example.com/phenotype/description/data#> as data {
 
     @rdfs:label "Site A EHR"
     @dc:description "Full EHR: coded conditions + lab observations."
-    instance SiteAEhr : phenotype:Dataset []
+    instance SiteAEhr : phenotype:Dataset [
+        phenotype:id "DS-SITEA"
+    ]
 
     @rdfs:label "Site B Claims"
     @dc:description "Claims extract: diagnosis codes only, no labs."
-    instance SiteBClaims : phenotype:Dataset []
+    instance SiteBClaims : phenotype:Dataset [
+        phenotype:id "DS-SITEB"
+    ]
 
     @rdfs:label "Condition.code"
     instance ConditionCode : phenotype:DataElement [
+        phenotype:id "DE-CONDCODE"
         phenotype:availableIn SiteAEhr
         phenotype:availableIn SiteBClaims
     ]
@@ -22,6 +27,7 @@ description <http://www.example.com/phenotype/description/data#> as data {
     // lab value: Site A only
     @rdfs:label "Observation.value"
     instance ObservationValue : phenotype:DataElement [
+        phenotype:id "DE-OBSVAL"
         phenotype:availableIn SiteAEhr
     ]
 }

@@ -45,9 +45,9 @@ clinical-phenotype-project/
 * **Vocabularies** (the method) live under `src/method`. Start at `vocabulary.oml`.
 * **Descriptions** (the model) live under `src/model`. Start at `bundle.oml`, which pulls in the
   four description files.
-* The two **bundles** are what make the closed-world reasoning work: the *vocabulary bundle*
-  causes disjointness axioms to be generated over the taxonomy, and the *description bundle*
-  gathers every instance so classification and the cohort rule see the whole model at once.
+* The two **bundles** drive the reasoning: the *vocabulary bundle* triggers the taxonomy-closure
+  axioms (sibling disjointness) to be generated, and the *description bundle* gathers every
+  instance so classification and the rules see the whole model at once.
 
 ## Domain scenario
 
@@ -93,8 +93,11 @@ oml reason -o build/owl --pretty   # persists asserted + entailed OWL as Turtle 
 5. **(Researcher)** Which patients, data elements, and other criteria are affected when one
    criterion changes?
 
-See the deliverable write-up for how each question maps onto the vocabulary and which entailments
-answer it.
+Each question maps onto specific terms and entailments: Q1 to the `RepresentedIntent` defined
+concept (dropped intent stays unclassified), Q2 to `MappedConcept` (unmapped concepts stay
+unclassified), Q3 to the `evaluableIn` rule (a criterion evaluable at Site A but not Site B),
+Q4 to `Evaluation`/`supports` plus the `excludedFrom` rule, and Q5 to `dependsOnConcept`,
+`satisfiedBy`, and `evaluableIn` (tracing what a criterion change touches).
 
 ## Author
 
