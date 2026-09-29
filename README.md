@@ -29,34 +29,51 @@ data).
 clinical-phenotype-project/
 ├── .oml/settings.yml                       # sources: src/method and src/model
 ├── README.md
+├── METHOD.md                               # D4: what the methodology prescribes and why
+├── ANALYSIS.md                             # D5: each Module 1 question -> evidence -> finding
 ├── src/
-│   ├── method/oml/www.example.com/phenotype/
-│   │   ├── vocabulary.oml                   # the vocabulary (concepts, properties, relations, rule)
-│   │   └── vocabulary-bundle.oml            # vocabulary bundle -> fires disjointness closure
-│   └── model/oml/www.example.com/phenotype/description/
-│       ├── data.oml                         # datasets + data elements
-│       ├── terminology.oml                  # SNOMED/LOINC concepts + is-a hierarchy + mappings
-│       ├── definition.oml                   # the T2DM phenotype: intent + computable criteria
-│       ├── cohort.oml                       # patients, evaluations, evidence
-│       └── bundle.oml                       # description bundle -> gathers all instances
-└── build/owl/                              # generated OWL + entailments (git-ignored)
+│   ├── method/
+│   │   ├── oml/www.example.com/phenotype/
+│   │   │   ├── vocabulary.oml               # concepts, properties, relations, 2 rules
+│   │   │   └── vocabulary-bundle.oml        # vocabulary bundle -> fires disjointness closure
+│   │   ├── md/www.example.com/phenotype/    # methodology templates (editors + analysis views)
+│   │   │   ├── intent.md realization.md     # pattern editors (compose)
+│   │   │   ├── terminology.md datasets.md
+│   │   │   ├── adjudication.md
+│   │   │   ├── dashboard.md gaps.md         # analysis views (compose)
+│   │   │   └── criterion-analysis.md        # per-criterion view (navigation)
+│   │   └── py/utils.py                       # helpers for the notebook
+│   └── model/
+│       ├── oml/www.example.com/phenotype/description/
+│       │   ├── data.oml terminology.oml     # datasets/elements; concepts + is-a + mappings
+│       │   ├── definition.oml               # phenotype: intent + computable criteria
+│       │   ├── cohort.oml                    # patients, evaluations, evidence
+│       │   └── bundle.oml                    # description bundle -> gathers all instances
+│       └── md/T2DM Phenotype/
+│           ├── Authoring/                    # dogfooding pages (compose the editors)
+│           └── Analysis/                     # Dashboard, Gaps, Notebook
+└── build/                                    # generated OWL/html/course (git-ignored)
 ```
 
-* **Vocabularies** (the method) live under `src/method`. Start at `vocabulary.oml`.
-* **Descriptions** (the model) live under `src/model`. Start at `bundle.oml`, which pulls in the
-  four description files.
+* **Vocabularies** (the method) live under `src/method/oml`. Start at `vocabulary.oml`.
+* **Descriptions** (the model) live under `src/model/oml`. Start at `bundle.oml`.
+* **Methodology templates** live under `src/method/md`: the five pattern editors, the analysis
+  dashboard, the gap report, and the per-criterion navigation view. Project pages under
+  `src/model/md/T2DM Phenotype` compose them by supplying an `ontology` context.
 * The two **bundles** drive the reasoning: the *vocabulary bundle* triggers the taxonomy-closure
-  axioms (sibling disjointness) to be generated, and the *description bundle* gathers every
-  instance so classification and the rules see the whole model at once.
+  axioms (sibling disjointness), and the *description bundle* gathers every instance so
+  classification and the rules see the whole model at once.
+* See **METHOD.md** for the four authoring patterns and **ANALYSIS.md** for the question-by-question
+  findings.
 
 ## Domain scenario
 
 A synthetic **Type 2 Diabetes (T2DM)** phenotype: five pieces of prose intent, four computable
 criteria (HbA1c ≥ 6.5, a recorded T2DM diagnosis, exclusion of type 1 diabetes, and an eGFR
 criterion), SNOMED CT / LOINC concepts with a real is-a hierarchy, two datasets (a full EHR and a
-claims extract), and two de-identified patients. The scenario is rigged so the reasoner can
-actually demonstrate each business question (e.g. one intent has no computable criterion; one
-concept has no data mapping).
+claims extract), and four de-identified patients. The scenario is deliberately imperfect so the
+analysis has something to find: one intent has no computable criterion, one concept has no data
+mapping, and one criterion is evaluable at one site but not the other.
 
 ## How to build / check it
 
@@ -64,17 +81,23 @@ Open the folder in VS Code with the **OML Code** extension (or run `oml start` o
 the project root:
 
 ```bash
-oml lint       # syntax + reference checks  -> "16 OML file(s) checked"
-oml validate   # SHACL table-editor checks   -> no targets (no markdown tables authored)
-oml reason     # consistency + entailments   -> "11 ontology file(s) checked", consistent
+oml lint       # syntax + reference checks         -> "16 OML file(s) checked"
+oml reason     # consistency + entailments         -> "11 ontology file(s) checked", consistent
+oml validate   # SHACL editor constraints per page -> "8 SHACL target(s) scanned"
+oml course -m src -b build/course   # compile the editor/dashboard/notebook pages
+oml render -m src -b build/web      # render the pages to static HTML
 ```
 
-To inspect the inferences (rule-derived cohort membership, defined-concept classifications,
-transitive subsumption, and the bundle-generated disjointness axioms):
+To inspect the inferences (rule-derived exclusion, defined-concept classifications, transitive
+subsumption, dataset evaluability, and the bundle-generated disjointness axioms):
 
 ```bash
 oml reason -o build/owl --pretty   # persists asserted + entailed OWL as Turtle under build/owl
 ```
+
+The editors, dashboard, gap report, and notebook are the **methodology** (`src/method/md`); the
+pages that use them are under **`src/model/md/T2DM Phenotype`**. Open those in the OML viewer to
+edit instances through the shapes and to run the analysis views.
 
 > Tip: run the CLI from the **project root** (the folder containing `.oml/`). If you `cd` into a
 > subfolder first, the OML server roots itself there and will not find the vocabulary under

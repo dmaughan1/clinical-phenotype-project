@@ -20,6 +20,18 @@ description <http://www.example.com/phenotype/description/cohort#> as cohort {
         phenotype:id "PT-0002"
     ]
 
+    @rdfs:label "Patient 0003"
+    @dc:description "HbA1c 8.1%, no coded diagnosis. Found only through the lab criterion."
+    instance PatientAnon003 : phenotype:Patient [
+        phenotype:id "PT-0003"
+    ]
+
+    @rdfs:label "Patient 0004"
+    @dc:description "Coded T2DM diagnosis, no lab on file."
+    instance PatientAnon004 : phenotype:Patient [
+        phenotype:id "PT-0004"
+    ]
+
     // --- evaluations (patient x criterion) ---
 
     @rdfs:label "P0001 meets HbA1c criterion"
@@ -46,6 +58,22 @@ description <http://www.example.com/phenotype/description/cohort#> as cohort {
         phenotype:membershipStatus "Excluded"
     ]
 
+    @rdfs:label "P0003 meets HbA1c criterion"
+    relation instance Eval003HbA1c : phenotype:Evaluation [
+        from PatientAnon003
+        to definition:HbA1cGE65
+        phenotype:id "EVAL-0003-HBA1C"
+        phenotype:membershipStatus "Included"
+    ]
+
+    @rdfs:label "P0004 meets diagnosis criterion"
+    relation instance Eval004Dx : phenotype:Evaluation [
+        from PatientAnon004
+        to definition:T2dmDx
+        phenotype:id "EVAL-0004-DX"
+        phenotype:membershipStatus "Included"
+    ]
+
     // --- evidence ---
 
     @rdfs:label "Lab result: HbA1c 7.8%"
@@ -67,5 +95,19 @@ description <http://www.example.com/phenotype/description/cohort#> as cohort {
     instance EvidenceT1002 : phenotype:Evidence [
         phenotype:id "EV-T1-002"
         phenotype:supports Eval002ExcludeT1
+    ]
+
+    @rdfs:label "Lab result: HbA1c 8.1%"
+    @dc:description "Observation HbA1c = 8.1% on 2024-07-30."
+    instance EvidenceHbA1c003 : phenotype:Evidence [
+        phenotype:id "EV-HBA1C-003"
+        phenotype:supports Eval003HbA1c
+    ]
+
+    @rdfs:label "Coded diagnosis: T2DM (P0004)"
+    @dc:description "Condition 44054006 recorded 2024-01-15."
+    instance EvidenceDx004 : phenotype:Evidence [
+        phenotype:id "EV-DX-004"
+        phenotype:supports Eval004Dx
     ]
 }
