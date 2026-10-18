@@ -1,0 +1,15 @@
+description <http://www.example.com/phenotype/description/codegen#> as codegenConfigs {
+
+	uses <http://opencaesar.io/codegen#> as codegen
+
+	// Binds the reusable phenotype-report generator (from src/method) to the T2DM model.
+	// This config lives in src/model and is NOT part of the packaged method — each consumer
+	// writes its own config pointing the installed spec at its own bundle.
+	extends <http://www.example.com/phenotype/codegen/phenotype-report#> as report
+
+	instance phenotypeReport : codegen:Config [
+		codegen:spec report:PhenotypeReportSpec
+		codegen:context "http://www.example.com/phenotype/description/bundle"
+		codegen:binding [ codegen:key "path" codegen:value "build/docs" ]
+	]
+}

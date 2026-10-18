@@ -5,7 +5,7 @@ oml-code:
 # project npm settings
 project:
   name: "@oml/clinical-phenotype-project"
-  version: 0.1.0
+  version: 0.2.0
   title: Clinical Phenotype Project
   description: The Clinical Phenotype Project ontologies.
 
@@ -13,6 +13,15 @@ project:
 sources:
   - src/method
   - src/model
+
+# packaging: ship ONLY the reusable method (vocabulary, editor templates, generator, helpers).
+# The T2DM sample model under src/model and its codegen config are intentionally excluded.
+pack:
+  - include: [src/method]
+
+# default output dir for `oml pack`
+defaults:
+  pack: -o build/dist
 
 # oml server settings
 # By default the server binds a free port chosen by the OS (the actual port is

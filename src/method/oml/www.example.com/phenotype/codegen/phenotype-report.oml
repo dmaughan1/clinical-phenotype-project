@@ -1,0 +1,302 @@
+description <http://www.example.com/phenotype/codegen/phenotype-report#> as phenotypeReport {
+
+	uses <http://opencaesar.io/codegen#> as codegen
+
+	// Reusable generator for the clinical phenotyping method.
+	//
+	// Produces a "Phenotype Specification & Data-Readiness Report" (Markdown) from ANY model
+	// that uses the phenotype vocabulary. The CONSTRUCT shapes a report graph rooted at each
+	// phenotype:Phenotype in the bound context; the template walks it. Nothing here is specific
+	// to T2DM — identifiers, labels, concepts, datasets and gaps are all read from the model.
+	//
+	// Design notes:
+	//  - Only ASSERTED forward relations are queried (comprises, implements, dependsOnConcept,
+	//    mappedTo, availableIn, oml:hasSource/hasTarget). The generator never depends on the
+	//    reasoner, so it behaves the same with or without entailment.
+	//  - Computable criteria are identified by having an asserted `implements` (every computable
+	//    criterion must implement >= 1 intent), not by the ComputableCriterion type, so the query
+	//    does not rely on subclass inference (instances are typed Inclusion/ExclusionCriterion).
+	//  - Gaps are CLOSED-WORLD enumerations over the asserted graph (FILTER NOT EXISTS). They
+	//    report "nothing is modeled here", not an open-world proof of absence; the report says so.
+
+	instance PhenotypeReportSpec : codegen:Spec [
+		codegen:construct """
+			PREFIX rdfs:      <http://www.w3.org/2000/01/rdf-schema#>
+			PREFIX dc:        <http://purl.org/dc/elements/1.1/>
+			PREFIX oml:       <http://opencaesar.io/oml#>
+			PREFIX codegen:   <http://opencaesar.io/codegen#>
+			PREFIX phen:      <http://www.example.com/phenotype/vocabulary#>
+			PREFIX rpt:       <http://www.example.com/phenotype/codegen/phenotype-report#>
+			PREFIX templates: <http://www.example.com/phenotype/codegen/phenotype-report#>
+
+			CONSTRUCT {
+				?file a codegen:File ;
+					codegen:path "${path}/Phenotype-Readiness.md" ;
+					codegen:template templates:ReportTemplate ;
+					codegen:root ?phenotype .
+
+				?phenotype a rpt:Phenotype ;
+					rpt:id ?phenId ;
+					rpt:label ?phenLabel ;
+					rpt:purpose ?phenPurpose ;
+					rpt:cohortLabel ?cohortLabel ;
+					rpt:intended ?intc ;
+					rpt:computable ?compc ;
+					rpt:concept ?usedConcept ;
+					rpt:unrealizedIntent ?unIntent ;
+					rpt:unmappedConcept ?unmapped ;
+					rpt:nonEvaluableCriterion ?nonEval ;
+					rpt:evaluation ?evalNode .
+
+				?intc a rpt:Intended ;
+					rpt:id ?intcId ;
+					rpt:label ?intcLabel ;
+					rpt:intentText ?intcText ;
+					rpt:realizedBy ?intcRealizer .
+
+				?compc a rpt:Computable ;
+					rpt:id ?compcId ;
+					rpt:label ?compcLabel ;
+					rpt:logic ?compcLogic ;
+					rpt:threshold ?compcThreshold ;
+					rpt:kind ?compcKind ;
+					rpt:implementsLabel ?compcImplLabel ;
+					rpt:usesConcept ?compcConcept ;
+					rpt:evaluableDataset ?compcDataset .
+
+				?usedConcept a rpt:Concept ;
+					rpt:id ?ucId ;
+					rpt:label ?ucLabel ;
+					rpt:code ?ucCode ;
+					rpt:system ?ucSys ;
+					rpt:mappingStatus ?ucMap ;
+					rpt:dataElement ?ucDE .
+
+				?ucDE a rpt:DataElement ;
+					rpt:id ?deId ;
+					rpt:label ?deLabel ;
+					rpt:dataset ?deDataset .
+
+				?deDataset a rpt:Dataset ;
+					rpt:id ?dsId ;
+					rpt:label ?dsLabel .
+
+				?evalNode a rpt:Evaluation ;
+					rpt:patientLabel ?evalPatientLabel ;
+					rpt:patientId ?evalPatientId ;
+					rpt:criterionLabel ?evalCritLabel ;
+					rpt:status ?evalStatus ;
+					rpt:evidenceLabel ?evalEvidenceLabel .
+
+				?phenotype rpt:unrealizedIntent ?unIntent .
+				?phenotype rpt:unmappedConcept ?unmapped .
+				?phenotype rpt:nonEvaluableCriterion ?nonEval .
+			}
+			WHERE {
+				?phenotype a phen:Phenotype .
+				BIND(IRI("urn:file:phenotype-readiness") AS ?file)
+
+				OPTIONAL { ?phenotype phen:id ?phenId }
+				OPTIONAL { ?phenotype rdfs:label ?phenLabel }
+				OPTIONAL { ?phenotype dc:description ?phenPurpose }
+				OPTIONAL { ?phenotype phen:yields ?cohort . OPTIONAL { ?cohort rdfs:label ?cohortLabel } }
+
+				# Intended criteria the phenotype comprises
+				OPTIONAL {
+					?phenotype phen:comprises ?intc .
+					?intc a phen:IntendedCriterion .
+					OPTIONAL { ?intc phen:id ?intcId }
+					OPTIONAL { ?intc rdfs:label ?intcLabel }
+					OPTIONAL { ?intc phen:intentText ?intcText }
+					OPTIONAL { ?intcRealizer phen:implements ?intc }
+				}
+
+				# Computable criteria the phenotype comprises (identified by `implements`)
+				OPTIONAL {
+					?phenotype phen:comprises ?compc .
+					?compc phen:implements ?compcImpl .
+					OPTIONAL { ?compc phen:id ?compcId }
+					OPTIONAL { ?compc rdfs:label ?compcLabel }
+					OPTIONAL { ?compc phen:logicExpression ?compcLogic }
+					OPTIONAL { ?compc phen:threshold ?compcThreshold }
+					OPTIONAL { ?compc a phen:InclusionCriterion . BIND("Inclusion" AS ?kindIncl) }
+					OPTIONAL { ?compc a phen:ExclusionCriterion . BIND("Exclusion" AS ?kindExcl) }
+					BIND(COALESCE(?kindExcl, ?kindIncl, "Computable") AS ?compcKind)
+					OPTIONAL { ?compcImpl rdfs:label ?compcImplLabel }
+					OPTIONAL { ?compc phen:dependsOnConcept ?compcConcept }
+					OPTIONAL {
+						?compc phen:dependsOnConcept ?compcK .
+						?compcK phen:mappedTo ?compcE .
+						?compcE phen:availableIn ?compcDataset .
+					}
+				}
+
+				# Clinical concepts the phenotype's criteria depend on, with the data chain
+				OPTIONAL {
+					?phenotype phen:comprises ?conceptCrit .
+					?conceptCrit phen:dependsOnConcept ?usedConcept .
+					OPTIONAL { ?usedConcept phen:id ?ucId }
+					OPTIONAL { ?usedConcept rdfs:label ?ucLabel }
+					OPTIONAL { ?usedConcept phen:conceptCode ?ucCode }
+					OPTIONAL { ?usedConcept phen:sourceSystem ?ucSys }
+					OPTIONAL { ?usedConcept phen:mappingStatus ?ucMap }
+					OPTIONAL {
+						?usedConcept phen:mappedTo ?ucDE .
+						OPTIONAL { ?ucDE phen:id ?deId }
+						OPTIONAL { ?ucDE rdfs:label ?deLabel }
+						OPTIONAL {
+							?ucDE phen:availableIn ?deDataset .
+							OPTIONAL { ?deDataset phen:id ?dsId }
+							OPTIONAL { ?deDataset rdfs:label ?dsLabel }
+						}
+					}
+				}
+
+				# GAP 1: intended criteria with no implementing computable criterion (closed-world)
+				OPTIONAL {
+					?phenotype phen:comprises ?unIntent .
+					?unIntent a phen:IntendedCriterion .
+					FILTER NOT EXISTS { ?anyComp phen:implements ?unIntent }
+				}
+
+				# GAP 2: concepts a criterion depends on that map to no data element (closed-world)
+				OPTIONAL {
+					?phenotype phen:comprises ?gapCrit .
+					?gapCrit phen:dependsOnConcept ?unmapped .
+					FILTER NOT EXISTS { ?unmapped phen:mappedTo ?anyDe }
+				}
+
+				# GAP 3: computable criteria with no evaluable data path in any dataset (closed-world)
+				OPTIONAL {
+					?phenotype phen:comprises ?nonEval .
+					?nonEval phen:implements ?nonEvalImpl .
+					FILTER NOT EXISTS {
+						?nonEval phen:dependsOnConcept ?ek .
+						?ek phen:mappedTo ?ee .
+						?ee phen:availableIn ?ed .
+					}
+				}
+
+				# Patient evaluations recorded against the phenotype's criteria (optional section)
+				OPTIONAL {
+					?evalNode a phen:Evaluation ;
+						oml:hasSource ?patient ;
+						oml:hasTarget ?evalCrit .
+					?phenotype phen:comprises ?evalCrit .
+					OPTIONAL { ?patient rdfs:label ?evalPatientLabel }
+					OPTIONAL { ?patient phen:id ?evalPatientId }
+					OPTIONAL { ?evalCrit rdfs:label ?evalCritLabel }
+					OPTIONAL { ?evalNode phen:membershipStatus ?evalStatus }
+					OPTIONAL { ?evidence phen:supports ?evalNode . OPTIONAL { ?evidence rdfs:label ?evalEvidenceLabel } }
+				}
+			}
+		"""
+		codegen:parameter "path"
+	]
+
+	instance ReportTemplate : codegen:Template [
+		codegen:body """
+			{% for ph in objects(file, "codegen:root") -%}
+			# Phenotype Specification & Data-Readiness Report
+
+			## {{ object(ph, "rpt:label") or object(ph, "rpt:id") }}
+
+			- **Identifier:** {{ object(ph, "rpt:id") or "—" }}
+			- **Intended purpose:** {{ object(ph, "rpt:purpose") or "—" }}
+			- **Target cohort:** {{ object(ph, "rpt:cohortLabel") or "—" }}
+			- **Intended criteria:** {{ objects(ph, "rpt:intended") | length }}
+			- **Computable criteria:** {{ objects(ph, "rpt:computable") | length }}
+			- **Clinical concepts referenced:** {{ objects(ph, "rpt:concept") | length }}
+			- **Patient evaluations recorded:** {{ objects(ph, "rpt:evaluation") | length }}
+
+			### A. Intended criteria
+
+			{% set intended = [] -%}
+			{% for ic in objects(ph, "rpt:intended") -%}
+			{% set _ = intended.push({ id: object(ic,"rpt:id") or "", label: object(ic,"rpt:label") or object(ic,"rpt:id"), intent: object(ic,"rpt:intentText") or "", realizers: objects(ic,"rpt:realizedBy") }) -%}
+			{% endfor -%}
+			{% if intended.length -%}
+			| Id | Criterion | Clinical intent | Realized by |
+			| --- | --- | --- | --- |
+			{% for r in intended | sort(false, true, "id") -%}
+			| {{ r.id or "—" }} | {{ r.label }} | {{ r.intent or "—" }} | {% if r.realizers.length %}{% for rc in r.realizers %}{{ object(rc,"rpt:label") }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}*none (unrealized)*{% endif %} |
+			{% endfor %}
+			{% else -%}
+			*No intended criteria are modeled for this phenotype.*
+			{% endif %}
+			### B. Computable realization
+
+			{% set computable = [] -%}
+			{% for cc in objects(ph, "rpt:computable") -%}
+			{% set _ = computable.push({ id: object(cc,"rpt:id") or "", label: object(cc,"rpt:label") or object(cc,"rpt:id"), logic: object(cc,"rpt:logic") or "", kind: object(cc,"rpt:kind") or "Computable", impl: object(cc,"rpt:implementsLabel") or "", concepts: objects(cc,"rpt:usesConcept"), datasets: objects(cc,"rpt:evaluableDataset") }) -%}
+			{% endfor -%}
+			{% if computable.length -%}
+			| Id | Criterion | Kind | Implements | Logic | Depends on concepts | Evaluable in |
+			| --- | --- | --- | --- | --- | --- | --- |
+			{% for r in computable | sort(false, true, "id") -%}
+			| {{ r.id or "—" }} | {{ r.label }} | {{ r.kind }} | {{ r.impl or "—" }} | `{{ r.logic or "—" }}` | {% if r.concepts.length %}{% for k in r.concepts %}{{ object(k,"rpt:label") or object(k,"rpt:id") }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}—{% endif %} | {% if r.datasets.length %}{% for d in r.datasets %}{{ object(d,"rpt:label") }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}*not evaluable*{% endif %} |
+			{% endfor %}
+			{% else -%}
+			*No computable criteria implement this phenotype yet.*
+			{% endif %}
+			### C. Terminology & data dependencies
+
+			Traces each referenced concept along `dependsOnConcept → mappedTo → availableIn`.
+
+			{% set concepts = [] -%}
+			{% for k in objects(ph, "rpt:concept") -%}
+			{% set _ = concepts.push({ id: object(k,"rpt:id") or "", label: object(k,"rpt:label") or object(k,"rpt:id"), code: object(k,"rpt:code") or "", system: object(k,"rpt:system") or "", status: object(k,"rpt:mappingStatus") or "", elements: objects(k,"rpt:dataElement") }) -%}
+			{% endfor -%}
+			{% if concepts.length -%}
+			| Concept | Code | System | Mapping | Data elements | Datasets |
+			| --- | --- | --- | --- | --- | --- |
+			{% for c in concepts | sort(false, true, "id") -%}
+			{% set dss = [] -%}
+			{% for e in c.elements %}{% for d in objects(e,"rpt:dataset") %}{% if (object(d,"rpt:label") or "") not in dss %}{% set _ = dss.push(object(d,"rpt:label") or object(d,"rpt:id")) %}{% endif %}{% endfor %}{% endfor -%}
+			| {{ c.label }} | {{ c.code or "—" }} | {{ c.system or "—" }} | {{ c.status or "—" }} | {% if c.elements.length %}{% for e in c.elements %}{{ object(e,"rpt:label") or object(e,"rpt:id") }}{% if not loop.last %}, {% endif %}{% endfor %}{% else %}*none*{% endif %} | {% if dss.length %}{{ dss | join(", ") }}{% else %}*no data mapping*{% endif %} |
+			{% endfor %}
+			{% else -%}
+			*No clinical concepts are referenced by this phenotype's criteria.*
+			{% endif %}
+			### D. Coverage & gaps
+
+			These are closed-world checks over the asserted model: they report what is *not modeled*,
+			which is not the same as an open-world proof that the relationship cannot exist.
+
+			{% set unIntent = objects(ph, "rpt:unrealizedIntent") -%}
+			{% set unmapped = objects(ph, "rpt:unmappedConcept") -%}
+			{% set nonEval = objects(ph, "rpt:nonEvaluableCriterion") -%}
+			**Intended criteria with no computable realization:**
+			{% if unIntent.length %}{% for i in unIntent %}
+			- {{ object(i,"rpt:label") or object(i,"rpt:id") }}{% endfor %}
+			{% else %} none.
+			{% endif %}
+			**Referenced concepts with no data-element mapping:**
+			{% if unmapped.length %}{% for u in unmapped %}
+			- {{ object(u,"rpt:label") or object(u,"rpt:id") }}{% if object(u,"rpt:system") %} ({{ object(u,"rpt:system") }} {{ object(u,"rpt:code") }}){% endif %}{% endfor %}
+			{% else %} none.
+			{% endif %}
+			**Computable criteria not evaluable in any dataset:**
+			{% if nonEval.length %}{% for n in nonEval %}
+			- {{ object(n,"rpt:label") or object(n,"rpt:id") }}{% endfor %}
+			{% else %} none.
+			{% endif %}
+			### E. Patient evidence summary
+
+			{% set evals = [] -%}
+			{% for ev in objects(ph, "rpt:evaluation") -%}
+			{% set _ = evals.push({ key: (object(ev,"rpt:patientId") or "") ~ "|" ~ (object(ev,"rpt:criterionLabel") or ""), patient: object(ev,"rpt:patientLabel") or object(ev,"rpt:patientId") or "", crit: object(ev,"rpt:criterionLabel") or "", status: object(ev,"rpt:status") or "", evidence: object(ev,"rpt:evidenceLabel") or "" }) -%}
+			{% endfor -%}
+			{% if evals.length -%}
+			| Patient | Criterion | Membership | Evidence |
+			| --- | --- | --- | --- |
+			{% for e in evals | sort(false, true, "key") -%}
+			| {{ e.patient }} | {{ e.crit or "—" }} | {{ e.status or "—" }} | {{ e.evidence or "—" }} |
+			{% endfor %}
+			{% else -%}
+			*No patient evaluations are recorded for this phenotype.*
+			{% endif %}
+			{% endfor -%}
+		"""
+	]
+}
