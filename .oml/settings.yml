@@ -5,7 +5,7 @@ oml-code:
 # project npm settings
 project:
   name: "@oml/clinical-phenotype-project"
-  version: 0.2.0
+  version: 1.0.0
   title: Clinical Phenotype Project
   description: The Clinical Phenotype Project ontologies.
 
@@ -29,7 +29,7 @@ defaults:
 # oml server settings
 # By default the server binds a free port chosen by the OS (the actual port is
 # reported by 'oml list'), so multiple workspaces never collide. Uncomment to
-# pin a fixed port instead — but make sure no other workspace uses the same one.
+# pin a fixed port instead â€” but make sure no other workspace uses the same one.
 # server:
 #   port: 8080
 
