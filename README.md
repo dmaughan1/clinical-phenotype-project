@@ -1,8 +1,12 @@
 # Clinical Phenotyping Ontology (SIE 502 Project Deliverable 2)
 
+[![Release](https://img.shields.io/github/v/release/dmaughan1/clinical-phenotype-project?sort=semver)](https://github.com/dmaughan1/clinical-phenotype-project/releases) [![Live Site](https://img.shields.io/badge/live%20site-GitHub%20Pages-blue)](https://dmaughan1.github.io/clinical-phenotype-project/)
+
+**Live site (v1.0.0):** https://dmaughan1.github.io/clinical-phenotype-project/
+
 An [OML](https://www.modelware.io/) model of the system described in Project Deliverable 1: a tool
 that lets a clinical researcher state, in plain language, the patient population they want to
-study, and returns the matching records from an authorized clinical dataset — while keeping the
+study, and returns the matching records from an authorized clinical dataset â€” while keeping the
 whole chain of reasoning explicit, from prose clinical **intent**, through **computable
 criteria**, down to **terminology concepts**, **data elements**, **datasets**, and finally the
 **patients** and the **cohort** they produce.
@@ -21,38 +25,38 @@ five business questions from Deliverable 1 (see [Business questions](#business-q
 
 ## Repository layout
 
-The professor's method/model split is used: the **method** (the vocabulary — *how* we describe
-phenotypes) is separated from the **model** (the description — *a specific* phenotype and its
+The professor's method/model split is used: the **method** (the vocabulary â€” *how* we describe
+phenotypes) is separated from the **model** (the description â€” *a specific* phenotype and its
 data).
 
 ```
 clinical-phenotype-project/
-├── .oml/settings.yml                       # sources: src/method and src/model
-├── README.md
-├── METHOD.md                               # D4: what the methodology prescribes and why
-├── ANALYSIS.md                             # D5: each Module 1 question -> evidence -> finding
-├── src/
-│   ├── method/
-│   │   ├── oml/www.example.com/phenotype/
-│   │   │   ├── vocabulary.oml               # concepts, properties, relations, 2 rules
-│   │   │   └── vocabulary-bundle.oml        # vocabulary bundle -> fires disjointness closure
-│   │   ├── md/www.example.com/phenotype/    # methodology templates (editors + analysis views)
-│   │   │   ├── intent.md realization.md     # pattern editors (compose)
-│   │   │   ├── terminology.md datasets.md
-│   │   │   ├── adjudication.md
-│   │   │   ├── dashboard.md gaps.md         # analysis views (compose)
-│   │   │   └── criterion-analysis.md        # per-criterion view (navigation)
-│   │   └── py/utils.py                       # helpers for the notebook
-│   └── model/
-│       ├── oml/www.example.com/phenotype/description/
-│       │   ├── data.oml terminology.oml     # datasets/elements; concepts + is-a + mappings
-│       │   ├── definition.oml               # phenotype: intent + computable criteria
-│       │   ├── cohort.oml                    # patients, evaluations, evidence
-│       │   └── bundle.oml                    # description bundle -> gathers all instances
-│       └── md/T2DM Phenotype/
-│           ├── Authoring/                    # dogfooding pages (compose the editors)
-│           └── Analysis/                     # Dashboard, Gaps, Notebook
-└── build/                                    # generated OWL/html/course (git-ignored)
+â”œâ”€â”€ .oml/settings.yml                       # sources: src/method and src/model
+â”œâ”€â”€ README.md
+â”œâ”€â”€ METHOD.md                               # D4: what the methodology prescribes and why
+â”œâ”€â”€ ANALYSIS.md                             # D5: each Module 1 question -> evidence -> finding
+â”œâ”€â”€ src/
+â”‚   â”œâ”€â”€ method/
+â”‚   â”‚   â”œâ”€â”€ oml/www.example.com/phenotype/
+â”‚   â”‚   â”‚   â”œâ”€â”€ vocabulary.oml               # concepts, properties, relations, 2 rules
+â”‚   â”‚   â”‚   â””â”€â”€ vocabulary-bundle.oml        # vocabulary bundle -> fires disjointness closure
+â”‚   â”‚   â”œâ”€â”€ md/www.example.com/phenotype/    # methodology templates (editors + analysis views)
+â”‚   â”‚   â”‚   â”œâ”€â”€ intent.md realization.md     # pattern editors (compose)
+â”‚   â”‚   â”‚   â”œâ”€â”€ terminology.md datasets.md
+â”‚   â”‚   â”‚   â”œâ”€â”€ adjudication.md
+â”‚   â”‚   â”‚   â”œâ”€â”€ dashboard.md gaps.md         # analysis views (compose)
+â”‚   â”‚   â”‚   â””â”€â”€ criterion-analysis.md        # per-criterion view (navigation)
+â”‚   â”‚   â””â”€â”€ py/utils.py                       # helpers for the notebook
+â”‚   â””â”€â”€ model/
+â”‚       â”œâ”€â”€ oml/www.example.com/phenotype/description/
+â”‚       â”‚   â”œâ”€â”€ data.oml terminology.oml     # datasets/elements; concepts + is-a + mappings
+â”‚       â”‚   â”œâ”€â”€ definition.oml               # phenotype: intent + computable criteria
+â”‚       â”‚   â”œâ”€â”€ cohort.oml                    # patients, evaluations, evidence
+â”‚       â”‚   â””â”€â”€ bundle.oml                    # description bundle -> gathers all instances
+â”‚       â””â”€â”€ md/T2DM Phenotype/
+â”‚           â”œâ”€â”€ Authoring/                    # dogfooding pages (compose the editors)
+â”‚           â””â”€â”€ Analysis/                     # Dashboard, Gaps, Notebook
+â””â”€â”€ build/                                    # generated OWL/html/course (git-ignored)
 ```
 
 * **Vocabularies** (the method) live under `src/method/oml`. Start at `vocabulary.oml`.
@@ -69,7 +73,7 @@ clinical-phenotype-project/
 ## Domain scenario
 
 A synthetic **Type 2 Diabetes (T2DM)** phenotype: five pieces of prose intent, four computable
-criteria (HbA1c ≥ 6.5, a recorded T2DM diagnosis, exclusion of type 1 diabetes, and an eGFR
+criteria (HbA1c â‰¥ 6.5, a recorded T2DM diagnosis, exclusion of type 1 diabetes, and an eGFR
 criterion), SNOMED CT / LOINC concepts with a real is-a hierarchy, two datasets (a full EHR and a
 claims extract), and four de-identified patients. The scenario is deliberately imperfect so the
 analysis has something to find: one intent has no computable criterion, one concept has no data
@@ -124,4 +128,4 @@ Q4 to `Evaluation`/`supports` plus the `excludedFrom` rule, and Q5 to `dependsOn
 
 ## Author
 
-David Maughan — SIE 502, Project Deliverable 2.
+David Maughan â€” SIE 502, Project Deliverable 2.
