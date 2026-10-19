@@ -46,7 +46,7 @@ description <http://www.example.com/phenotype/description/definition#> as defini
         phenotype:id "CMP-HBA1C"
         phenotype:logicExpression "Observation(HbA1c).value >= 6.5"
         phenotype:threshold 6.5
-        phenotype:implements IntentElevatedHbA1c
+        phenotype:implements IntentElevatedHbA1cX
         phenotype:dependsOnConcept terminology:HbA1cMeasurement
     ]
 
