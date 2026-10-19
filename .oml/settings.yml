@@ -19,9 +19,12 @@ sources:
 pack:
   - include: [src/method]
 
-# default output dir for `oml pack`
+# default CLI arguments per command (see note at the bottom of this file).
+#   pack   -> output the package tarball under build/dist
+#   render -> render the T2DM model site (model md pages + description bundle) into build/web for GitHub Pages
 defaults:
   pack: -o build/dist
+  render: -m src/model/md -b build/web -c src/model/oml/www.example.com/phenotype/description/bundle.oml
 
 # oml server settings
 # By default the server binds a free port chosen by the OS (the actual port is
